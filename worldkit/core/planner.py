@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 """CEM (Cross-Entropy Method) planner for world models.
 
 Optimizes action sequences by sampling candidates, evaluating them
 via latent rollouts, and iteratively refining around the best ones.
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 

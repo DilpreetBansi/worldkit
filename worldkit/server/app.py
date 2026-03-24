@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """FastAPI inference server for WorldKit."""
+
+from __future__ import annotations
 
 import io
 import os

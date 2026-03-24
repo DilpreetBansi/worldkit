@@ -1,6 +1,6 @@
-from __future__ import annotations
-
 """Convert video and image data to WorldKit HDF5 format."""
+
+from __future__ import annotations
 
 from pathlib import Path
 

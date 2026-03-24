@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 """Vision Transformer encoder for WorldKit.
 
 Converts raw pixel observations (RGB images) into compact latent representations
 using a ViT backbone with CLS token pooling.
 """
+
+from __future__ import annotations
 
 import torch
 import torch.nn as nn

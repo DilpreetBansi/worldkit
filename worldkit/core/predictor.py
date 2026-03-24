@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """Autoregressive predictor for latent dynamics.
 
 Given a sequence of latent states and actions, predicts future latent states.
 Based on the ARPredictor from LeWM which uses a conditional transformer with
 AdaLN-Zero (Adaptive Layer Normalization with zero initialization).
 """
+
+from __future__ import annotations
 
 import torch
 import torch.nn as nn

@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """JEPA (Joint-Embedding Predictive Architecture) world model.
 
 Combines encoder, predictor, and action encoder into a unified model
 that can encode observations, predict future states, and compute costs
 for planning.
 """
+
+from __future__ import annotations
 
 import torch
 import torch.nn as nn

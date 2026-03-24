@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 """Action encoder module.
 
 Embeds discrete or continuous actions into the same latent space
 as the state representations, for conditioning the predictor.
 """
+
+from __future__ import annotations
 
 import torch
 import torch.nn as nn

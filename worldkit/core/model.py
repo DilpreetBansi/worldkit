@@ -1,10 +1,10 @@
-from __future__ import annotations
-
 """WorldModel — the main developer interface for WorldKit.
 
 This is the ONLY class most developers need to use.
 Provides: train, predict, plan, plausibility, save, load, from_hub, export.
 """
+
+from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path

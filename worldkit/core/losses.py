@@ -1,11 +1,11 @@
-from __future__ import annotations
-
 """Loss functions for WorldKit world models.
 
 Implements:
 - SIGReg: Sketch Isotropic Gaussian Regularizer (prevents collapse with 1 hyperparameter)
 - Prediction loss: MSE between predicted and actual next-state embeddings
 """
+
+from __future__ import annotations
 
 import torch
 import torch.nn as nn
