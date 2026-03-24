@@ -1,0 +1,92 @@
+WorldKit
+Copyright (c) 2026 Dilpreet Bansi and WorldKit Contributors
+
+This product is an independent open-source project. It is NOT affiliated with,
+endorsed by, or sponsored by any of the researchers, institutions, or companies
+mentioned below.
+
+================================================================================
+THIRD-PARTY NOTICES
+================================================================================
+
+WorldKit's architecture is inspired by and based on publicly available research.
+All third-party code used by WorldKit is consumed as dependencies (not copied
+into this repository) under their respective licenses.
+
+--------------------------------------------------------------------------------
+LeWorldModel (LeWM)
+--------------------------------------------------------------------------------
+Paper: "LeWorldModel: Learning World Models with Joint-Embedding Predictive
+        Architectures"
+Authors: Lucas Maes, Quentin Le Lidec, Damien Scieur, Yann LeCun,
+         Randall Balestriero
+Year: 2026
+URL: https://le-wm.github.io/
+Code: https://github.com/lucas-maes/le-wm
+
+WorldKit's core architecture (encoder, predictor, SIGReg loss, CEM planner) is
+based on the JEPA world model design described in this paper. The WorldKit SDK
+is an original implementation providing a developer-friendly wrapper. We are
+grateful to the authors for publishing their research openly.
+
+--------------------------------------------------------------------------------
+stable-worldmodel
+--------------------------------------------------------------------------------
+Authors: Galilai Group
+URL: https://github.com/galilai-group/stable-worldmodel
+License: See the stable-worldmodel repository for license terms.
+
+WorldKit lists stable-worldmodel as an optional dependency for environment
+integration. No code from stable-worldmodel is copied into this repository.
+
+--------------------------------------------------------------------------------
+PyTorch
+--------------------------------------------------------------------------------
+Copyright (c) Meta Platforms, Inc. and affiliates.
+URL: https://pytorch.org/
+License: BSD-3-Clause
+
+--------------------------------------------------------------------------------
+Hugging Face Hub
+--------------------------------------------------------------------------------
+Copyright (c) Hugging Face, Inc.
+URL: https://huggingface.co/
+License: Apache-2.0
+
+--------------------------------------------------------------------------------
+Vision Transformer (ViT)
+--------------------------------------------------------------------------------
+Paper: "An Image is Worth 16x16 Words: Transformers for Image Recognition
+        at Scale"
+Authors: Alexey Dosovitskiy et al.
+Year: 2020
+URL: https://arxiv.org/abs/2010.11929
+
+WorldKit uses the ViT architecture for its encoder. The implementation is
+original, using standard PyTorch nn.Module components.
+
+--------------------------------------------------------------------------------
+FastAPI
+--------------------------------------------------------------------------------
+Copyright (c) Sebastian Ramirez
+URL: https://fastapi.tiangolo.com/
+License: MIT
+
+================================================================================
+IMPORTANT LEGAL NOTICE
+================================================================================
+
+WorldKit does NOT include, copy, or redistribute any proprietary code, trained
+model weights, or datasets from any third party. All code in this repository is
+original work by the WorldKit contributors, implementing concepts described in
+publicly available research papers.
+
+Pre-trained models hosted on the WorldKit Hub (Hugging Face) are trained
+independently by WorldKit contributors using publicly available environments
+and datasets. They are NOT copies of or derived from any third-party model
+checkpoints.
+
+Any trademarks, trade names, or logos mentioned in this project belong to their
+respective owners and are used solely for identification and attribution
+purposes. Their use does not imply any affiliation with or endorsement by the
+trademark owners.

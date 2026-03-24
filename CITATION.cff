@@ -1,0 +1,38 @@
+cff-version: 1.2.0
+title: "WorldKit: The Open-Source World Model Runtime"
+message: >-
+  If you use WorldKit in your research, please cite it using
+  the metadata from this file. Please also cite the LeWorldModel
+  paper, which WorldKit's architecture is based on.
+type: software
+authors:
+  - given-names: Dilpreet
+    family-names: Bansi
+    alias: DilpreetBansi
+repository-code: "https://github.com/DilpreetBansi/worldkit"
+license: MIT
+version: 0.1.0
+date-released: "2026-03-23"
+keywords:
+  - world-models
+  - jepa
+  - robotics
+  - planning
+  - physics
+  - machine-learning
+references:
+  - type: article
+    title: "LeWorldModel: Learning World Models with Joint-Embedding Predictive Architectures"
+    authors:
+      - given-names: Lucas
+        family-names: Maes
+      - given-names: Quentin
+        family-names: Le Lidec
+      - given-names: Damien
+        family-names: Scieur
+      - given-names: Yann
+        family-names: LeCun
+      - given-names: Randall
+        family-names: Balestriero
+    year: 2026
+    url: "https://le-wm.github.io/"

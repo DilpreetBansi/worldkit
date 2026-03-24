@@ -1,0 +1,92 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "worldkit"
+version = "0.1.0"
+description = "The open-source world model runtime. Train physics-aware AI on a laptop. Deploy anywhere."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+authors = [
+    { name = "WorldKit Contributors" },
+]
+keywords = ["world-models", "jepa", "robotics", "planning", "physics", "ai"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "torch>=2.0",
+    "torchvision>=0.15",
+    "numpy>=1.24",
+    "Pillow>=9.0",
+    "h5py>=3.8",
+    "einops>=0.7",
+    "huggingface-hub>=0.20",
+    "safetensors>=0.4",
+    "tqdm>=4.65",
+    "pyyaml>=6.0",
+    "click>=8.0",
+]
+
+[project.optional-dependencies]
+train = [
+    "wandb>=0.16",
+    "hydra-core>=1.3",
+    "omegaconf>=2.3",
+    "lightning>=2.0",
+    "transformers>=4.36",
+    "scikit-learn>=1.3",
+    "matplotlib>=3.7",
+]
+envs = [
+    "gymnasium>=0.29",
+    "opencv-python>=4.8",
+]
+serve = [
+    "fastapi>=0.110",
+    "uvicorn>=0.27",
+    "python-multipart>=0.0.6",
+]
+export = [
+    "onnx>=1.15",
+    "onnxruntime>=1.17",
+]
+all = [
+    "worldkit[train,envs,serve,export]",
+]
+dev = [
+    "worldkit[all]",
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.3",
+    "pre-commit>=3.5",
+]
+
+[project.scripts]
+worldkit = "worldkit.cli.main:cli"
+
+[project.urls]
+Homepage = "https://github.com/worldkit-ai/worldkit"
+Documentation = "https://worldkit-ai.github.io/worldkit"
+Repository = "https://github.com/worldkit-ai/worldkit"
+Issues = "https://github.com/worldkit-ai/worldkit/issues"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
