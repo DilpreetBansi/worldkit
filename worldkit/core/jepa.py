@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """JEPA (Joint-Embedding Predictive Architecture) world model.
 
 Combines encoder, predictor, and action encoder into a unified model

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Autoregressive predictor for latent dynamics.
 
 Given a sequence of latent states and actions, predicts future latent states.

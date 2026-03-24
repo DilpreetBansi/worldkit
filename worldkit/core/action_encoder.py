@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Action encoder module.
 
 Embeds discrete or continuous actions into the same latent space

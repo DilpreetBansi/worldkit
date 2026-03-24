@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """WorldModel — the main developer interface for WorldKit.
 
 This is the ONLY class most developers need to use.
@@ -101,7 +103,12 @@ class WorldModel:
         torch.manual_seed(seed)
 
         if device == "auto":
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
 
         if isinstance(config, str):
             model_config = get_config(config, action_dim=action_dim, lambda_reg=lambda_reg)
@@ -269,7 +276,12 @@ class WorldModel:
         from huggingface_hub import hf_hub_download
 
         if device == "auto":
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
 
         model_path = hf_hub_download(repo_id=model_id, filename="model.wk")
         return cls.load(model_path, device=device)
@@ -278,7 +290,12 @@ class WorldModel:
     def load(cls, path: str | Path, device: str = "auto") -> "WorldModel":
         """Load a WorldKit model from a .wk file."""
         if device == "auto":
-            device = "cuda" if torch.cuda.is_available() else "cpu"
+            if torch.cuda.is_available():
+                device = "cuda"
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                device = "mps"
+            else:
+                device = "cpu"
 
         checkpoint = torch.load(path, map_location=device, weights_only=False)
         config = checkpoint["config"]

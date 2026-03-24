@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Vision Transformer encoder for WorldKit.
 
 Converts raw pixel observations (RGB images) into compact latent representations

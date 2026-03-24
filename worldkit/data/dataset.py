@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Data loading utilities for WorldKit.
 
 Supports HDF5 and video data formats.

@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """Record environment interactions to HDF5 format for training."""
 
 from pathlib import Path
