@@ -1,8 +1,14 @@
-"""JEPA (Joint-Embedding Predictive Architecture) world model.
+"""World model using the JEPA architectural pattern.
 
-Combines encoder, predictor, and action encoder into a unified model
-that can encode observations, predict future states, and compute costs
-for planning.
+JEPA (Joint-Embedding Predictive Architecture) is a class of architectures
+where prediction happens in latent space rather than pixel space. This module
+combines a ViT encoder, an autoregressive predictor with AdaLN-Zero conditioning,
+and an action encoder into a unified world model.
+
+The architecture is trained with SIGReg regularization (see losses.py) to
+prevent representation collapse — the key challenge in training JEPAs.
+
+Based on: LeWorldModel (Maes et al., 2026) — https://le-wm.github.io/
 """
 
 from __future__ import annotations

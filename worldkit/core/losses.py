@@ -1,8 +1,13 @@
 """Loss functions for WorldKit world models.
 
 Implements:
-- SIGReg: Sketch Isotropic Gaussian Regularizer (prevents collapse with 1 hyperparameter)
-- Prediction loss: MSE between predicted and actual next-state embeddings
+- SIGReg: Sketch Isotropic Gaussian Regularizer — prevents representation collapse
+  with a single hyperparameter, replacing the 6+ hyperparameters needed by prior
+  methods (VICReg, Barlow Twins, BYOL). From the LeWM paper (Maes et al., 2026).
+- Prediction loss: MSE between predicted and actual next-state latent embeddings.
+
+The combined loss is: L = L_pred + lambda * SIGReg(Z)
+where lambda is the ONE tunable hyperparameter.
 """
 
 from __future__ import annotations

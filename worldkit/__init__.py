@@ -1,11 +1,13 @@
-"""WorldKit — The open-source world model runtime.
+"""WorldKit — The open-source world model SDK.
 
-Train physics-aware AI on a laptop. Deploy anywhere.
+Train, predict, plan, and deploy world models from a single Python interface.
+Built on the JEPA architecture with SIGReg training (Maes et al., 2026).
 
 Usage:
     from worldkit import WorldModel
 
-    model = WorldModel.train(data="my_data.h5")
+    model = WorldModel.train(data="my_data.h5", config="base", epochs=100)
+    result = model.predict(current_frame, actions)
     plan = model.plan(current_frame, goal_frame)
 """
 

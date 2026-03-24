@@ -1,37 +1,49 @@
-<p align="center">
-  <h1 align="center">WorldKit</h1>
-  <p align="center">
-    <strong>The open-source world model runtime.</strong><br>
-    Train physics-aware AI on a laptop. Deploy anywhere.
-  </p>
-  <p align="center">
-    <a href="https://opensource.org/licenses/MIT"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT"></a>
-    <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/python-3.10+-blue.svg" alt="Python 3.10+"></a>
-    <a href="https://github.com/DilpreetBansi/worldkit/issues"><img src="https://img.shields.io/github/issues/DilpreetBansi/worldkit" alt="Issues"></a>
-  </p>
-</p>
+<div align="center">
+
+# WorldKit
+
+**The open-source world model SDK.**<br>
+Train, predict, plan, and deploy — on a laptop.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![CI](https://github.com/DilpreetBansi/worldkit/actions/workflows/ci.yml/badge.svg)](https://github.com/DilpreetBansi/worldkit/actions)
+[![Models on HF](https://img.shields.io/badge/Models-Hugging%20Face-orange)](https://huggingface.co/DilpreetBansi)
+
+[Paper](https://le-wm.github.io/) | [Models](https://huggingface.co/DilpreetBansi) | [Docs](docs/) | [Examples](examples/) | [Contributing](CONTRIBUTING.md)
+
+</div>
 
 ---
 
 ## What is WorldKit?
 
-WorldKit is an **independent, open-source Python SDK** that provides a clean, developer-friendly interface for training, predicting, planning, and evaluating lightweight world models.
-
-WorldKit is built on top of the **JEPA (Joint-Embedding Predictive Architecture)** introduced in the [LeWorldModel paper](#acknowledgments). We provide an original SDK layer — the underlying research architecture is credited fully below.
+WorldKit is a Python SDK for training and deploying lightweight **world models** — neural networks that learn how environments behave and can imagine future states without interacting with the real world.
 
 ```python
 from worldkit import WorldModel
 
+# Train a world model from your data
 model = WorldModel.train(data="my_data.h5", config="base", epochs=100)
-plan  = model.plan(current_frame, goal_frame, max_steps=50)
+
+# Imagine the future: given a state and actions, predict what happens next
+result = model.predict(current_frame, actions)
+
+# Plan: find the actions that reach a goal state
+plan = model.plan(current_frame, goal_frame, max_steps=50)
 ```
 
-**Key capabilities:**
-- **5 lines to train** a world model from your own data
-- **1 line to predict** future states from actions
-- **1 line to plan** optimal action sequences to reach goals
-- **Anomaly detection** via violation-of-expectation scoring
-- **Multiple export targets** — ONNX, TorchScript for edge deployment
+**Why world models matter:** Instead of trial-and-error in the real world (slow, expensive, dangerous), a world model lets an agent "think ahead" by simulating outcomes in a learned latent space. This is how robots can plan manipulation sequences, how game AI can anticipate physics, and how anomaly detectors can flag impossible events.
+
+**Why WorldKit:** Existing world model implementations are research code — coupled to specific environments, hard to train, harder to deploy. WorldKit gives you a clean `train → predict → plan → deploy` pipeline with one hyperparameter.
+
+### Key Features
+
+- **Train in minutes** — 13M-param model trains in ~60 seconds on an M4 MacBook
+- **One hyperparameter** — SIGReg regularization replaces 6+ collapse-prevention hyperparameters
+- **Plan in latent space** — CEM planner "imagines" thousands of futures without rendering pixels
+- **Deploy anywhere** — Export to ONNX or TorchScript for edge, mobile, or server
+- **Hub integration** — Push and pull trained models from Hugging Face
 
 ## Install
 
@@ -39,61 +51,137 @@ plan  = model.plan(current_frame, goal_frame, max_steps=50)
 pip install worldkit
 ```
 
-With optional extras:
+Optional extras:
 ```bash
-pip install worldkit[train]    # Training deps (WandB, Hydra, transformers)
+pip install worldkit[train]    # WandB logging, Hydra configs
 pip install worldkit[envs]     # Gymnasium environment wrappers
 pip install worldkit[serve]    # FastAPI inference server
-pip install worldkit[export]   # ONNX/TorchScript export
+pip install worldkit[export]   # ONNX / TorchScript export
 pip install worldkit[all]      # Everything
 ```
 
 ## Quickstart
 
+### Train a model
+
 ```python
 from worldkit import WorldModel
-import numpy as np
 
-# Train from HDF5 data
-model = WorldModel.train(data="my_data.h5", config="base", epochs=100)
-
-# Or load a pre-trained model
-# model = WorldModel.from_hub("worldkit/pusht")
-
-# Encode an observation to a compact latent vector
-obs = np.random.rand(96, 96, 3).astype(np.float32)
-z = model.encode(obs)  # → (192,) latent vector
-
-# Predict future states given actions
-actions = [np.array([0.1, 0.2])] * 10
-result = model.predict(obs, actions)
-
-# Plan an action sequence to reach a goal
-goal = np.random.rand(96, 96, 3).astype(np.float32)
-plan = model.plan(obs, goal, max_steps=50)
-
-# Score physical plausibility of a video sequence
-frames = [np.random.rand(96, 96, 3).astype(np.float32) for _ in range(30)]
-score = model.plausibility(frames)  # → 0.0 (impossible) to 1.0 (expected)
-
-# Save and load
+model = WorldModel.train(
+    data="my_data.h5",   # HDF5 with pixels + actions
+    config="base",        # nano | base | large | xl
+    epochs=100,
+)
 model.save("my_model.wk")
-loaded = WorldModel.load("my_model.wk")
-
-# Export for deployment
-model.export(format="torchscript", output="./deploy/")
 ```
+
+### Load a pre-trained model
+
+```python
+model = WorldModel.from_hub("DilpreetBansi/pusht")
+```
+
+### Predict future states
+
+```python
+# Given current observation and a sequence of actions,
+# roll out the dynamics model in latent space
+result = model.predict(current_frame, actions=[action] * 10)
+# result.latent_trajectory: (10, 192) predicted latent states
+# result.confidence: prediction confidence score
+```
+
+### Plan to reach a goal
+
+```python
+# Find an action sequence that takes you from current_frame to goal_frame
+plan = model.plan(current_frame, goal_frame, max_steps=50)
+# plan.actions: optimized action sequence
+# plan.cost: final planning cost (lower = closer to goal)
+```
+
+### Detect anomalies
+
+```python
+# Score whether a video sequence is physically plausible
+score = model.plausibility(video_frames)
+# 1.0 = expected behavior, 0.0 = physically impossible
+```
+
+## Pre-trained Models
+
+| Model | Config | Params | Latent Dim | Task | Download |
+|-------|--------|--------|------------|------|----------|
+| [`DilpreetBansi/pusht`](https://huggingface.co/DilpreetBansi/pusht) | base | 13M | 192 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht")` |
+| [`DilpreetBansi/pusht-nano`](https://huggingface.co/DilpreetBansi/pusht-nano) | nano | 3.5M | 128 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht-nano")` |
+
+> Train your own and share it: `model.save("my_model.wk")` then upload to the Hub.
 
 ## Model Configurations
 
-WorldKit ships with four model sizes. All share the same API.
+All configs share the same API. Pick the one that fits your compute budget.
 
-| Config | Params | Latent Dim | Train Time (1 GPU) | Use Case |
-|--------|--------|------------|---------------------|----------|
-| `nano` | ~3.5M | 128 | ~1 hour | Edge devices, fast prototyping |
-| `base` | ~13M | 192 | ~3 hours | Default — based on the paper's architecture |
-| `large` | ~54M | 384 | ~8 hours | Complex 3D environments |
-| `xl` | ~102M | 512 | ~20 hours | Multi-object, high-fidelity |
+| Config | Params | Latent Dim | Encoder | Predictor Depth | Train Time* |
+|--------|--------|------------|---------|-----------------|------------|
+| `nano` | ~3.5M | 128 | ViT-Tiny | 2 layers | ~30s |
+| `base` | ~13M | 192 | ViT-Small | 3 layers | ~60s |
+| `large` | ~54M | 384 | ViT-Base | 4 layers | ~8 min |
+| `xl` | ~102M | 512 | ViT-Large | 6 layers | ~20 min |
+
+*On Apple M4 Pro with MPS. GPU times will vary.
+
+## Architecture
+
+WorldKit implements a world model using the [JEPA](https://openreview.net/forum?id=BZ5a1r-kVsf) (Joint-Embedding Predictive Architecture) pattern — an architecture class [proposed by Yann LeCun](https://openreview.net/forum?id=BZ5a1r-kVsf) where prediction happens in **latent space** rather than pixel space.
+
+JEPA alone is an architecture, not a training method. Many architectures are JEPAs (including Siamese networks from 1993). The critical question is **how you prevent representation collapse** — how you stop the model from learning a trivial mapping where all inputs produce the same output.
+
+WorldKit uses **SIGReg** (Sketch Isotropic Gaussian Regularizer), introduced in the [LeWorldModel paper](https://le-wm.github.io/), which solves collapse with a single hyperparameter:
+
+```
+L = L_prediction + λ · SIGReg(Z)
+
+where:
+  L_prediction = MSE between predicted and actual latent states
+  SIGReg(Z)    = KL divergence approximation enforcing Gaussian structure on Z
+  λ             = the ONE hyperparameter you tune (default: 1.0)
+```
+
+This replaces the 6+ hyperparameters required by prior methods (VICReg, Barlow Twins, BYOL).
+
+### Components
+
+```
+Observation (96x96 RGB)
+        │
+        ▼
+┌───────────────┐
+│   ViT Encoder │ ── CLS token pooling ──▶ z ∈ R^192 (latent state)
+└───────────────┘
+        │
+        ▼
+┌───────────────────────┐
+│ Predictor (AdaLN-Zero)│ ── conditioned on action embeddings
+│   Transformer         │ ── causal attention
+└───────────────────────┘
+        │
+        ▼
+   z' ∈ R^192 (predicted next state)
+        │
+        ▼
+┌───────────────┐
+│  CEM Planner  │ ── samples action candidates
+│               │ ── rolls out in latent space (no pixels)
+│               │ ── refines toward goal
+└───────────────┘
+        │
+        ▼
+   Optimal action sequence
+```
+
+- **Encoder** — Vision Transformer (ViT) compresses 96x96 RGB images into compact latent vectors via CLS token pooling. ~200x more compact than patch-level representations.
+- **Predictor** — Transformer with AdaLN-Zero conditioning. Given latent state z and action a, predicts next state z'. Autoregressive for multi-step rollouts.
+- **Planner** — Cross-Entropy Method (CEM) that searches for optimal actions by "imagining" outcomes entirely in latent space — no rendering, no physics engine needed.
 
 ## CLI
 
@@ -104,18 +192,17 @@ worldkit train --data ./data.h5 --config base --epochs 100
 # Serve as REST API
 worldkit serve --model ./model.wk --port 8000
 
-# Export for deployment
+# Export for edge deployment
 worldkit export --model ./model.wk --format onnx
 
-# Model info
+# Inspect a model
 worldkit info --model ./model.wk
 
-# Convert video data
+# Convert video data to HDF5
 worldkit convert --input ./videos/ --output ./data.h5 --fps 10
 
-# Hub (Hugging Face)
-worldkit hub list
-worldkit hub download worldkit/pusht
+# Hub operations
+worldkit hub download DilpreetBansi/pusht
 ```
 
 ## REST API
@@ -126,108 +213,107 @@ worldkit serve --model ./model.wk --port 8000
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Server status |
+| `/health` | GET | Server status and model info |
 | `/encode` | POST | Encode observation to latent vector |
-| `/predict` | POST | Predict future states from actions |
-| `/plan` | POST | Plan action sequence to reach goal |
-| `/plausibility` | POST | Score physical plausibility of video |
+| `/predict` | POST | Predict future latent states from actions |
+| `/plan` | POST | Plan optimal action sequence to reach a goal |
+| `/plausibility` | POST | Score physical plausibility of a video |
 
-## Architecture Overview
+## Examples
 
-WorldKit implements a JEPA (Joint-Embedding Predictive Architecture) world model with three core components:
-
-1. **Encoder** (Vision Transformer) — Compresses raw pixel observations into compact latent vectors via CLS token pooling
-2. **Predictor** (Transformer with AdaLN-Zero) — Models environment dynamics in latent space: given state z and action a, predicts next state z'
-3. **CEM Planner** (Cross-Entropy Method) — Searches for optimal action sequences by "imagining" outcomes entirely in latent space
-
-The training loss has only **one tunable hyperparameter** (lambda):
-
-```
-L = L_prediction + λ · SIGReg(Z)
-```
-
-SIGReg (Sketch Isotropic Gaussian Regularizer) prevents representation collapse by enforcing a Gaussian structure on the latent space — replacing the 6 hyperparameters needed by prior approaches (VICReg, Barlow Twins, etc.) with just one.
+| Example | What it shows |
+|---------|---------------|
+| [`01_quickstart.py`](examples/01_quickstart.py) | Train, predict, plan in 5 lines |
+| [`02_train_from_gym.py`](examples/02_train_from_gym.py) | Record a Gymnasium env and train |
+| [`03_plan_to_goal.py`](examples/03_plan_to_goal.py) | Goal-conditioned CEM planning |
+| [`04_anomaly_detection.py`](examples/04_anomaly_detection.py) | Detect physically impossible events |
+| [`05_export_onnx.py`](examples/05_export_onnx.py) | Export to ONNX / TorchScript |
+| [`06_serve_api.py`](examples/06_serve_api.py) | Deploy as a REST API |
+| [`07_latent_probing.py`](examples/07_latent_probing.py) | Visualize what the latent space learns |
 
 ## Project Structure
 
 ```
 worldkit/
-├── core/           # Model, encoder, predictor, planner, losses, config
-├── data/           # HDF5 dataset loading, env recording, video conversion
-├── cli/            # Click CLI (train, serve, export, hub, convert, record)
+├── core/           # WorldModel, ViT encoder, predictor, CEM planner, SIGReg loss
+├── data/           # HDF5 dataset, env recorder, video converter
+├── cli/            # CLI commands (train, serve, export, hub, convert)
 ├── server/         # FastAPI inference server
-├── envs/           # Gymnasium environment wrappers
-├── eval/           # Evaluation tools (planning benchmarks, probing, visualization)
+├── envs/           # Gymnasium wrappers
+├── eval/           # Benchmarks, probing, visualization
 ├── export/         # ONNX and TorchScript export
 └── hub/            # Hugging Face Hub integration
 ```
 
-## Examples
+## Research & Acknowledgments
 
-See the [`examples/`](examples/) directory:
+WorldKit is an **independent open-source project** created by [Dilpreet Bansi](https://github.com/DilpreetBansi). It is not affiliated with, endorsed by, or sponsored by any of the researchers or institutions listed below.
 
-| Example | Description |
-|---------|-------------|
-| [`01_quickstart.py`](examples/01_quickstart.py) | Train, predict, plan in 5 lines |
-| [`02_train_from_gym.py`](examples/02_train_from_gym.py) | Record and train from Gymnasium |
-| [`03_plan_to_goal.py`](examples/03_plan_to_goal.py) | Goal-conditioned CEM planning |
-| [`04_anomaly_detection.py`](examples/04_anomaly_detection.py) | Plausibility-based anomaly detection |
-| [`05_export_onnx.py`](examples/05_export_onnx.py) | Export to TorchScript/ONNX |
-| [`06_serve_api.py`](examples/06_serve_api.py) | Deploy as REST API |
-| [`07_latent_probing.py`](examples/07_latent_probing.py) | Explore the learned latent space |
-
-## Acknowledgments
-
-WorldKit is an **independent project** created by [Dilpreet Bansi](https://github.com/DilpreetBansi). It is **not affiliated with, endorsed by, or sponsored by** any of the researchers or institutions listed below.
-
-WorldKit's architecture is based on research from the following paper:
+WorldKit's architecture and training methodology are based on:
 
 > **LeWorldModel: Learning World Models with Joint-Embedding Predictive Architectures**
 > Lucas Maes, Quentin Le Lidec, Damien Scieur, Yann LeCun, Randall Balestriero (2026)
 > [Paper](https://le-wm.github.io/) | [Code](https://github.com/lucas-maes/le-wm)
 
-This paper introduced the JEPA-based world model with SIGReg regularization that WorldKit wraps into a developer-friendly SDK. We are deeply grateful to the authors for making their research and code publicly available.
+The JEPA architectural pattern was proposed in:
 
-WorldKit also builds on top of these open-source projects:
+> **A Path Towards Autonomous Machine Intelligence**
+> Yann LeCun (2022)
+> [Paper](https://openreview.net/forum?id=BZ5a1r-kVsf)
 
-- **[stable-worldmodel](https://github.com/galilai-group/stable-worldmodel)** — The underlying research library published on PyPI by the Galilai Group
+WorldKit builds on these open-source projects:
+
 - **[PyTorch](https://pytorch.org/)** — Deep learning framework (BSD License)
-- **[Hugging Face Hub](https://huggingface.co/)** — Model hosting and distribution (Apache 2.0)
-- **[Vision Transformer (ViT)](https://arxiv.org/abs/2010.11929)** — Encoder architecture by Dosovitskiy et al.
+- **[Hugging Face Hub](https://huggingface.co/)** — Model hosting (Apache 2.0)
+- **[Vision Transformer](https://arxiv.org/abs/2010.11929)** — Dosovitskiy et al., 2020
 - **[FastAPI](https://fastapi.tiangolo.com/)** — REST API framework (MIT License)
 
-The SIGReg loss function used in WorldKit is based on the Sketch Isotropic Gaussian Regularizer from the LeWM paper. Our implementation is an original re-implementation for use within the WorldKit SDK.
+### Citation
+
+If you use WorldKit in your research, please cite both WorldKit and the underlying research:
+
+```bibtex
+@software{worldkit,
+  title   = {WorldKit: The Open-Source World Model SDK},
+  author  = {Bansi, Dilpreet},
+  year    = {2026},
+  url     = {https://github.com/DilpreetBansi/worldkit},
+  license = {MIT}
+}
+
+@article{lewm2026,
+  title   = {LeWorldModel: Learning World Models with Joint-Embedding Predictive Architectures},
+  author  = {Maes, Lucas and Le Lidec, Quentin and Scieur, Damien and LeCun, Yann and Balestriero, Randall},
+  year    = {2026},
+  url     = {https://le-wm.github.io/}
+}
+```
+
+## Known Limitations
+
+- **Synthetic data only** — current pre-trained models are trained on synthetic Push-T environments. Real-world robotics models coming soon.
+- **No video decoder** — WorldKit predicts in latent space. It does not reconstruct pixel observations from latent states (by design — this is a feature of JEPA, not a limitation).
+- **Single-task models** — each model is trained on one environment. Multi-task and transfer learning are planned.
+- **CPU/MPS training only tested** — CUDA training works but is less extensively tested at this stage.
 
 ## Disclaimer
 
-This software is provided "as is" without warranty of any kind. WorldKit is an **independent open-source project**. It is not affiliated with, endorsed by, or connected to Meta, FAIR, NYU, AMI Labs, World Labs, Physical Intelligence, or any other company or research institution.
+This software is provided "as is" without warranty of any kind. WorldKit is an independent open-source project. It is not affiliated with, endorsed by, or connected to Meta, FAIR, NYU, or any other company or research institution.
 
-WorldKit does not include or redistribute any proprietary code, datasets, or model weights from third parties. Pre-trained models available on the WorldKit Hub are trained independently by the WorldKit community using publicly available environments and datasets.
-
-The authors and contributors of WorldKit are not responsible for any use or misuse of this software. Users are responsible for ensuring their use complies with all applicable laws and regulations.
+See [NOTICE](NOTICE) for complete third-party attribution.
 
 ## Contributing
 
-Contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Contributions welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
-WorldKit is released under the [MIT License](LICENSE).
-
-```
-MIT License — Copyright (c) 2026 WorldKit Contributors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software...
-```
-
-See [LICENSE](LICENSE) for the full text.
+[MIT License](LICENSE) — Copyright (c) 2026 Dilpreet Bansi and WorldKit Contributors.
 
 ---
 
-<p align="center">
-  Built by <a href="https://github.com/DilpreetBansi">Dilpreet Bansi</a>
-</p>
+<div align="center">
+
+Built by [Dilpreet Bansi](https://github.com/DilpreetBansi)
+
+</div>
