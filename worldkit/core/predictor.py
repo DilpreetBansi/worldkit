@@ -133,7 +133,7 @@ class ARPredictor(nn.Module):
         self.hidden_dim = hidden_dim
 
         self.input_proj = nn.Linear(input_dim, hidden_dim)
-        self.pos_embed = nn.Parameter(torch.randn(1, num_frames, hidden_dim))
+        self.pos_embed = nn.Parameter(torch.randn(1, num_frames, hidden_dim) * 0.02)
         self.emb_dropout = nn.Dropout(emb_dropout)
 
         self.blocks = nn.ModuleList(

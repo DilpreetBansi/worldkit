@@ -94,15 +94,17 @@ async def plausibility(video: UploadFile = File(...)):
         tmp.write(await video.read())
         tmp_path = tmp.name
 
-    cap = cv2.VideoCapture(tmp_path)
-    frames = []
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-        frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
-    cap.release()
-    os.unlink(tmp_path)
+    try:
+        cap = cv2.VideoCapture(tmp_path)
+        frames = []
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                break
+            frames.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
+        cap.release()
+    finally:
+        os.unlink(tmp_path)
 
     score = model.plausibility(frames)
     return {

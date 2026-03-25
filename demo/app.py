@@ -1,7 +1,6 @@
 """WorldKit interactive demo for Hugging Face Spaces."""
 
 import gradio as gr
-import numpy as np
 
 from worldkit import WorldModel
 from worldkit.core.config import get_config

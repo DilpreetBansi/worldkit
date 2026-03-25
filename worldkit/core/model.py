@@ -35,6 +35,15 @@ class ProbeResult:
     summary: str
 
 
+def _auto_device() -> str:
+    """Detect the best available device."""
+    if torch.cuda.is_available():
+        return "cuda"
+    if hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+        return "mps"
+    return "cpu"
+
+
 class WorldModel:
     """The open-source world model runtime.
 
@@ -103,12 +112,7 @@ class WorldModel:
         torch.manual_seed(seed)
 
         if device == "auto":
-            if torch.cuda.is_available():
-                device = "cuda"
-            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"
-            else:
-                device = "cpu"
+            device = _auto_device()
 
         if isinstance(config, str):
             model_config = get_config(config, action_dim=action_dim, lambda_reg=lambda_reg)
@@ -281,12 +285,7 @@ class WorldModel:
         from huggingface_hub import hf_hub_download
 
         if device == "auto":
-            if torch.cuda.is_available():
-                device = "cuda"
-            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"
-            else:
-                device = "cpu"
+            device = _auto_device()
 
         model_path = hf_hub_download(repo_id=model_id, filename="model.wk")
         return cls.load(model_path, device=device)
@@ -295,12 +294,7 @@ class WorldModel:
     def load(cls, path: str | Path, device: str = "auto") -> "WorldModel":
         """Load a WorldKit model from a .wk file."""
         if device == "auto":
-            if torch.cuda.is_available():
-                device = "cuda"
-            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                device = "mps"
-            else:
-                device = "cpu"
+            device = _auto_device()
 
         checkpoint = torch.load(path, map_location=device, weights_only=False)
         config = checkpoint["config"]
@@ -332,27 +326,35 @@ class WorldModel:
 
     def encode(self, observation: np.ndarray | torch.Tensor) -> torch.Tensor:
         """Encode a raw observation into a latent vector."""
+        was_training = self._jepa.training
         self._jepa.eval()
-        with torch.no_grad():
-            if isinstance(observation, np.ndarray):
-                observation = torch.from_numpy(observation).float()
-            if observation.max() > 1.0:
-                observation = observation / 255.0
-            if observation.dim() == 3 and observation.shape[-1] in (1, 3):
-                observation = observation.permute(2, 0, 1)
-            observation = observation.unsqueeze(0).to(self._device)
-            z = self._jepa.encode(observation)
-            return z.squeeze(0).cpu()
+        try:
+            with torch.no_grad():
+                if isinstance(observation, np.ndarray):
+                    observation = torch.from_numpy(observation).float()
+                else:
+                    observation = observation.float()
+                if observation.max() > 1.0:
+                    observation = observation / 255.0
+                if observation.dim() == 3 and observation.shape[-1] in (1, 3):
+                    observation = observation.permute(2, 0, 1)
+                observation = observation.unsqueeze(0).to(self._device)
+                z = self._jepa.encode(observation)
+                return z.squeeze(0).cpu()
+        finally:
+            if was_training:
+                self._jepa.train()
 
     @torch.no_grad()
     def predict(
         self,
-        observation: np.ndarray,
+        observation: np.ndarray | torch.Tensor,
         actions: list,
         steps: int | None = None,
         return_latents: bool = False,
     ) -> PredictionResult:
         """Predict future states given current observation and action sequence."""
+        was_training = self._jepa.training
         self._jepa.eval()
 
         obs_tensor = self._prepare_observation(observation)
@@ -372,11 +374,14 @@ class WorldModel:
         trajectory = self._jepa.rollout(ctx_pixels, ctx_actions, plan_actions, context_length=1)
         trajectory = trajectory.squeeze(1)
 
-        return PredictionResult(
+        result = PredictionResult(
             latent_trajectory=trajectory.squeeze(0).cpu(),
             confidence=0.8,
             steps=len(actions),
         )
+        if was_training:
+            self._jepa.train()
+        return result
 
     @torch.no_grad()
     def plan(
@@ -394,6 +399,7 @@ class WorldModel:
         Uses CEM (Cross-Entropy Method) to search action space
         via latent rollouts. Plans in ~1 second.
         """
+        was_training = self._jepa.training
         self._jepa.eval()
 
         planner = CEMPlanner(
@@ -422,6 +428,8 @@ class WorldModel:
             device=self._device,
         )
 
+        if was_training:
+            self._jepa.train()
         return result
 
     @torch.no_grad()
@@ -434,21 +442,25 @@ class WorldModel:
 
         Returns score from 0.0 (impossible) to 1.0 (fully expected).
         """
-        self._jepa.eval()
-
         if not frames or len(frames) < 2:
             return 1.0
 
-        latents = torch.stack([self.encode(frame) for frame in frames])
+        was_training = self._jepa.training
+        self._jepa.eval()
 
-        errors = []
-        for t in range(len(latents) - 1):
-            error = torch.nn.functional.mse_loss(latents[t], latents[t + 1]).item()
-            errors.append(error)
+        try:
+            latents = torch.stack([self.encode(frame) for frame in frames])
 
-        avg_error = float(np.mean(errors))
-        score = float(np.clip(np.exp(-avg_error * 10), 0.0, 1.0))
-        return score
+            # Compute consecutive-frame prediction errors
+            diffs = latents[1:] - latents[:-1]
+            errors = (diffs ** 2).mean(dim=-1)
+            avg_error = errors.mean().item()
+
+            score = float(np.clip(np.exp(-avg_error * 10), 0.0, 1.0))
+            return score
+        finally:
+            if was_training:
+                self._jepa.train()
 
     # ─── Export ─────────────────────────────────────────
 
@@ -502,9 +514,12 @@ class WorldModel:
 
     # ─── Internal helpers ───────────────────────────────
 
-    def _prepare_observation(self, obs: np.ndarray) -> torch.Tensor:
-        """Convert numpy observation to model-ready tensor."""
-        tensor = torch.from_numpy(obs).float()
+    def _prepare_observation(self, obs: np.ndarray | torch.Tensor) -> torch.Tensor:
+        """Convert observation to model-ready tensor."""
+        if isinstance(obs, np.ndarray):
+            tensor = torch.from_numpy(obs).float()
+        else:
+            tensor = obs.float()
         if tensor.max() > 1.0:
             tensor = tensor / 255.0
         if tensor.dim() == 3 and tensor.shape[-1] in (1, 3):
