@@ -13,24 +13,24 @@ username = api.whoami()["name"]
 
 MODELS = [
     {
-        "local_path": "checkpoints/pusht_nano.wk",
+        "local_path": "checkpoints/pusht_nano_real.wk",
         "repo_name": "pusht-nano",
         "config": "nano",
         "params": "3.5M",
         "latent_dim": 128,
         "size_mb": 13.4,
         "train_time": "30 seconds",
-        "val_loss": 0.51,
+        "val_loss": 0.48,
     },
     {
-        "local_path": "checkpoints/pusht_base.wk",
+        "local_path": "checkpoints/pusht_base_real.wk",
         "repo_name": "pusht-base",
         "config": "base",
         "params": "13M",
         "latent_dim": 192,
         "size_mb": 50.2,
-        "train_time": "1 minute",
-        "val_loss": 0.39,
+        "train_time": "2 minutes",
+        "val_loss": 0.35,
     },
 ]
 
@@ -204,7 +204,7 @@ def main():
     except Exception as e:
         print(f"  Note: {e}")
 
-    base_path = root / "checkpoints" / "pusht_base.wk"
+    base_path = root / "checkpoints" / "pusht_base_real.wk"
     api.upload_file(
         path_or_fileobj=str(base_path),
         path_in_repo="model.wk",

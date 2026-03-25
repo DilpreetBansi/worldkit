@@ -76,10 +76,10 @@ dev = [
 worldkit = "worldkit.cli.main:cli"
 
 [project.urls]
-Homepage = "https://github.com/worldkit-ai/worldkit"
-Documentation = "https://worldkit-ai.github.io/worldkit"
-Repository = "https://github.com/worldkit-ai/worldkit"
-Issues = "https://github.com/worldkit-ai/worldkit/issues"
+Homepage = "https://github.com/DilpreetBansi/worldkit"
+Documentation = "https://github.com/DilpreetBansi/worldkit#readme"
+Repository = "https://github.com/DilpreetBansi/worldkit"
+Issues = "https://github.com/DilpreetBansi/worldkit/issues"
 
 [tool.ruff]
 line-length = 100
