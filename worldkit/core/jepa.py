@@ -145,8 +145,12 @@ class JEPA(nn.Module):
 
         trajectory = self.rollout(pixels, actions, action_candidates, context_length)
 
-        final_states = trajectory[:, :, -1, :]
-        goal_expanded = goal_emb.unsqueeze(1).expand_as(final_states)
+        if trajectory.dim() == 3:
+            final_states = trajectory[:, -1, :]
+            goal_expanded = goal_emb.expand_as(final_states)
+        else:
+            final_states = trajectory[:, :, -1, :]
+            goal_expanded = goal_emb.unsqueeze(1).expand_as(final_states)
 
         costs = F.mse_loss(final_states, goal_expanded, reduction="none").mean(dim=-1)
         return costs

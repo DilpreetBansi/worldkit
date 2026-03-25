@@ -92,6 +92,9 @@ class Recorder:
             padded_pixels.append(pixels)
             padded_actions.append(actions)
 
+        if not padded_pixels:
+            raise ValueError("No valid episodes recorded — all episodes were empty")
+
         self.output.parent.mkdir(parents=True, exist_ok=True)
         with h5py.File(self.output, "w") as f:
             f.create_dataset(

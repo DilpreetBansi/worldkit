@@ -68,6 +68,9 @@ class SIGReg(nn.Module):
             proj = proj / proj.norm(dim=-1, keepdim=True)
             self._proj = proj
 
+        if self._proj.device != z.device:
+            self._proj = self._proj.to(z.device)
+
         projected = z_flat @ self._proj.T
 
         mean = projected.mean(dim=0, keepdim=True)

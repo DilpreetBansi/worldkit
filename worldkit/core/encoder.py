@@ -129,8 +129,8 @@ class SimpleViT(nn.Module):
             nn.LayerNorm(dim),
         )
 
-        self.cls_token = nn.Parameter(torch.randn(1, 1, dim))
-        self.pos_embed = nn.Parameter(torch.randn(1, num_patches + 1, dim))
+        self.cls_token = nn.Parameter(torch.randn(1, 1, dim) * 0.02)
+        self.pos_embed = nn.Parameter(torch.randn(1, num_patches + 1, dim) * 0.02)
 
         self.transformer = nn.ModuleList(
             [

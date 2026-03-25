@@ -215,6 +215,11 @@ class WorldModel:
                     sigreg=model._sigreg,
                 )
 
+                if torch.isnan(total_loss) or torch.isinf(total_loss):
+                    print("  Warning: NaN/Inf loss detected, skipping batch")
+                    optimizer.zero_grad()
+                    continue
+
                 total_loss.backward()
                 torch.nn.utils.clip_grad_norm_(model._jepa.parameters(), max_norm=1.0)
                 optimizer.step()
@@ -337,7 +342,7 @@ class WorldModel:
                 observation = observation.permute(2, 0, 1)
             observation = observation.unsqueeze(0).to(self._device)
             z = self._jepa.encode(observation)
-            return z.squeeze(0)
+            return z.squeeze(0).cpu()
 
     @torch.no_grad()
     def predict(
@@ -431,26 +436,19 @@ class WorldModel:
         """
         self._jepa.eval()
 
-        if len(frames) < 2:
+        if not frames or len(frames) < 2:
             return 1.0
 
-        latents = []
-        for frame in frames:
-            z = self.encode(frame)
-            latents.append(z)
-
-        latents = torch.stack(latents)
+        latents = torch.stack([self.encode(frame) for frame in frames])
 
         errors = []
         for t in range(len(latents) - 1):
-            predicted = latents[t]
-            actual = latents[t + 1]
-            error = torch.nn.functional.mse_loss(predicted, actual).item()
+            error = torch.nn.functional.mse_loss(latents[t], latents[t + 1]).item()
             errors.append(error)
 
-        avg_error = np.mean(errors)
-        score = float(np.exp(-avg_error * 10))
-        return max(0.0, min(1.0, score))
+        avg_error = float(np.mean(errors))
+        score = float(np.clip(np.exp(-avg_error * 10), 0.0, 1.0))
+        return score
 
     # ─── Export ─────────────────────────────────────────
 

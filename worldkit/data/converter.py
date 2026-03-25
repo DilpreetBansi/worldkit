@@ -74,6 +74,9 @@ class Converter:
                     np.zeros((len(frames), action_dim), dtype=np.float32)
                 )
 
+        if not all_frames:
+            raise ValueError("No valid video frames extracted from input files")
+
         max_len = max(f.shape[0] for f in all_frames)
         padded_frames = []
         padded_actions = []

@@ -71,7 +71,8 @@ class CEMPlanner:
         assert B == 1, "CEM planner currently supports batch size 1"
 
         mean = torch.zeros(self.planning_horizon, self.action_dim, device=device)
-        std = torch.ones(self.planning_horizon, self.action_dim, device=device) * 0.5
+        init_std = (self.action_high - self.action_low) / 3.0
+        std = torch.ones(self.planning_horizon, self.action_dim, device=device) * init_std
 
         best_actions = None
         best_cost = float("inf")
