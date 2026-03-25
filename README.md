@@ -6,11 +6,11 @@
 Train, predict, plan, and deploy — on a laptop.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![CI](https://github.com/DilpreetBansi/worldkit/actions/workflows/ci.yml/badge.svg)](https://github.com/DilpreetBansi/worldkit/actions)
 [![Models on HF](https://img.shields.io/badge/Models-Hugging%20Face-orange)](https://huggingface.co/DilpreetBansi)
 
-[Paper](https://le-wm.github.io/) | [Models](https://huggingface.co/DilpreetBansi) | [Docs](docs/) | [Examples](examples/) | [Contributing](CONTRIBUTING.md)
+[Paper](https://le-wm.github.io/) | [Models](https://huggingface.co/DilpreetBansi) | [Demo](https://huggingface.co/spaces/DilpreetBansi/worldkit-demo) | [Examples](examples/) | [Contributing](CONTRIBUTING.md)
 
 </div>
 
@@ -113,9 +113,10 @@ score = model.plausibility(video_frames)
 | Model | Config | Params | Latent Dim | Task | Download |
 |-------|--------|--------|------------|------|----------|
 | [`DilpreetBansi/pusht`](https://huggingface.co/DilpreetBansi/pusht) | base | 13M | 192 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht")` |
+| [`DilpreetBansi/pusht-base`](https://huggingface.co/DilpreetBansi/pusht-base) | base | 13M | 192 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht-base")` |
 | [`DilpreetBansi/pusht-nano`](https://huggingface.co/DilpreetBansi/pusht-nano) | nano | 3.5M | 128 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht-nano")` |
 
-> Train your own and share it: `model.save("my_model.wk")` then upload to the Hub.
+> Trained on real Push-T expert demonstrations. Train your own and share it: `model.save("my_model.wk")` then upload to the Hub.
 
 ## Model Configurations
 
@@ -340,7 +341,7 @@ Want to help build this? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known Limitations
 
-- **Synthetic data only** — current pre-trained models are trained on synthetic Push-T environments. Real-world robotics models coming soon.
+- **Single environment** — current pre-trained models are trained on Push-T. More environments and real-world robotics models coming soon.
 - **No video decoder** — WorldKit predicts in latent space. It does not reconstruct pixel observations from latent states (by design — this is a feature of JEPA, not a limitation).
 - **Single-task models** — each model is trained on one environment. Multi-task and transfer learning are planned.
 - **CPU/MPS training only tested** — CUDA training works but is less extensively tested at this stage.
