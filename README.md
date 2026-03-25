@@ -289,6 +289,34 @@ If you use WorldKit in your research, please cite both WorldKit and the underlyi
 }
 ```
 
+## Roadmap
+
+WorldKit v0.1 ships with the LeWM architecture. The goal is to become a **unified SDK for all world model architectures** — same `train/predict/plan` API, multiple backends.
+
+| Version | Architecture | Status |
+|---------|-------------|--------|
+| **v0.1** | LeWM (JEPA + SIGReg) | **Available now** |
+| v0.2 | [Dreamer V4](https://arxiv.org/abs/2301.04104) (VAE-based) | Planned |
+| v0.3 | [TD-MPC2](https://arxiv.org/abs/2310.16828) (task-specific MPC) | Planned |
+| v0.4 | [DIAMOND](https://arxiv.org/abs/2405.12399) (diffusion-based) | Planned |
+| v0.5 | Custom architecture API | Planned |
+
+The vision:
+
+```python
+# Today (v0.1) — LeWM is the default and only backend
+model = WorldModel.train(data="my_data.h5", config="base")
+
+# Future (v0.2+) — choose your architecture, same API
+model = WorldModel.train(data="my_data.h5", arch="lewm", config="base")
+model = WorldModel.train(data="my_data.h5", arch="dreamer", config="medium")
+model = WorldModel.train(data="my_data.h5", arch="td-mpc", config="large")
+```
+
+One API. Any world model. Train on a laptop, deploy anywhere.
+
+Want to help build this? See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## Known Limitations
 
 - **Synthetic data only** — current pre-trained models are trained on synthetic Push-T environments. Real-world robotics models coming soon.
