@@ -249,11 +249,21 @@ worldkit/
 
 WorldKit is an **independent open-source project** created by [Dilpreet Bansi](https://github.com/DilpreetBansi). It is not affiliated with, endorsed by, or sponsored by any of the researchers or institutions listed below.
 
-WorldKit's architecture and training methodology are based on:
+The concept of learning world models with neural networks was pioneered by:
+
+> **Recurrent World Models Facilitate Policy Evolution**
+> David Ha, Jürgen Schmidhuber (2018) — NIPS 2018
+> [Paper](https://worldmodels.github.io/) | [Code](https://github.com/hardmaru/WorldModelsExperiments)
+
+Ha & Schmidhuber demonstrated that agents can learn entirely inside their own "dreams" — training in a learned simulation of the environment and transferring policies back to reality. Their VAE + MDN-RNN architecture is the foundation that all modern world models build upon.
+
+WorldKit v0.1 implements the architecture and training methodology from:
 
 > **LeWorldModel: Learning World Models with Joint-Embedding Predictive Architectures**
 > Lucas Maes, Quentin Le Lidec, Damien Scieur, Yann LeCun, Randall Balestriero (2026)
 > [Paper](https://le-wm.github.io/) | [Code](https://github.com/lucas-maes/le-wm)
+
+LeWM builds on Ha & Schmidhuber's vision but replaces the generative approach (pixel reconstruction) with a JEPA-based approach (latent prediction), and uses SIGReg to solve the collapse problem with a single hyperparameter.
 
 The JEPA architectural pattern was proposed in:
 
@@ -287,19 +297,29 @@ If you use WorldKit in your research, please cite both WorldKit and the underlyi
   year    = {2026},
   url     = {https://le-wm.github.io/}
 }
+
+@incollection{ha2018worldmodels,
+  title     = {Recurrent World Models Facilitate Policy Evolution},
+  author    = {Ha, David and Schmidhuber, J{\"u}rgen},
+  booktitle = {Advances in Neural Information Processing Systems 31},
+  pages     = {2451--2463},
+  year      = {2018},
+  url       = {https://worldmodels.github.io}
+}
 ```
 
 ## Roadmap
 
 WorldKit v0.1 ships with the LeWM architecture. The goal is to become a **unified SDK for all world model architectures** — same `train/predict/plan` API, multiple backends.
 
-| Version | Architecture | Status |
-|---------|-------------|--------|
-| **v0.1** | LeWM (JEPA + SIGReg) | **Available now** |
-| v0.2 | [Dreamer V4](https://arxiv.org/abs/2301.04104) (VAE-based) | Planned |
-| v0.3 | [TD-MPC2](https://arxiv.org/abs/2310.16828) (task-specific MPC) | Planned |
-| v0.4 | [DIAMOND](https://arxiv.org/abs/2405.12399) (diffusion-based) | Planned |
-| v0.5 | Custom architecture API | Planned |
+| Version | Architecture | Type | Status |
+|---------|-------------|------|--------|
+| **v0.1** | [LeWM](https://le-wm.github.io/) (JEPA + SIGReg) | Latent prediction | **Available now** |
+| v0.2 | [Ha & Schmidhuber (2018)](https://worldmodels.github.io/) (VAE + MDN-RNN) | Generative | Planned |
+| v0.3 | [Dreamer V4](https://arxiv.org/abs/2301.04104) (VAE-based) | Generative | Planned |
+| v0.4 | [TD-MPC2](https://arxiv.org/abs/2310.16828) (task-specific MPC) | Latent prediction | Planned |
+| v0.5 | [DIAMOND](https://arxiv.org/abs/2405.12399) (diffusion-based) | Generative | Planned |
+| v0.6 | Custom architecture API | Any | Planned |
 
 The vision:
 
@@ -309,6 +329,7 @@ model = WorldModel.train(data="my_data.h5", config="base")
 
 # Future (v0.2+) — choose your architecture, same API
 model = WorldModel.train(data="my_data.h5", arch="lewm", config="base")
+model = WorldModel.train(data="my_data.h5", arch="ha2018", config="base")
 model = WorldModel.train(data="my_data.h5", arch="dreamer", config="medium")
 model = WorldModel.train(data="my_data.h5", arch="td-mpc", config="large")
 ```

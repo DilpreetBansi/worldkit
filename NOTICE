@@ -14,6 +14,24 @@ All third-party code used by WorldKit is consumed as dependencies (not copied
 into this repository) under their respective licenses.
 
 --------------------------------------------------------------------------------
+World Models (Ha & Schmidhuber, 2018)
+--------------------------------------------------------------------------------
+Paper: "Recurrent World Models Facilitate Policy Evolution"
+Authors: David Ha, Jürgen Schmidhuber
+Year: 2018
+Conference: NIPS 2018
+URL: https://worldmodels.github.io/
+Code: https://github.com/hardmaru/WorldModelsExperiments
+
+Ha & Schmidhuber pioneered the modern concept of learning world models with
+neural networks — demonstrating that agents can learn entirely inside their own
+"dreams" (a learned simulation of the environment) and transfer policies back to
+reality. Their VAE + MDN-RNN architecture is the foundation that all modern
+world models build upon, including the LeWM architecture that WorldKit v0.1
+implements. WorldKit's roadmap includes the Ha & Schmidhuber (2018) architecture
+as a planned backend.
+
+--------------------------------------------------------------------------------
 LeWorldModel (LeWM)
 --------------------------------------------------------------------------------
 Paper: "LeWorldModel: Learning World Models with Joint-Embedding Predictive

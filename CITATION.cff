@@ -1,9 +1,9 @@
 cff-version: 1.2.0
-title: "WorldKit: The Open-Source World Model Runtime"
+title: "WorldKit: The Open-Source World Model SDK"
 message: >-
   If you use WorldKit in your research, please cite it using
-  the metadata from this file. Please also cite the LeWorldModel
-  paper, which WorldKit's architecture is based on.
+  the metadata from this file. Please also cite the foundational
+  world models papers: Ha & Schmidhuber (2018) and LeWorldModel (2026).
 type: software
 authors:
   - given-names: Dilpreet
@@ -36,3 +36,13 @@ references:
         family-names: Balestriero
     year: 2026
     url: "https://le-wm.github.io/"
+  - type: conference-paper
+    title: "Recurrent World Models Facilitate Policy Evolution"
+    authors:
+      - given-names: David
+        family-names: Ha
+      - given-names: Jürgen
+        family-names: Schmidhuber
+    year: 2018
+    collection-title: "Advances in Neural Information Processing Systems 31"
+    url: "https://worldmodels.github.io/"
