@@ -12,6 +12,10 @@ Train, predict, plan, and deploy — on a laptop.
 
 [Paper](https://le-wm.github.io/) | [Models](https://huggingface.co/DilpreetBansi) | [Demo](https://huggingface.co/spaces/DilpreetBansi/worldkit-demo) | [Examples](examples/) | [Contributing](CONTRIBUTING.md)
 
+<br>
+
+<img src="demo.gif" alt="WorldKit Demo" width="720">
+
 </div>
 
 ---
