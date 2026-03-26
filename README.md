@@ -16,6 +16,8 @@ Train, predict, plan, and deploy — on a laptop.
 
 <img src="demo.gif" alt="WorldKit Demo" width="720">
 
+Try the interactive tutorial: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DilpreetBansi/worldkit/blob/main/notebooks/quickstart.ipynb)
+
 </div>
 
 ---
@@ -48,6 +50,14 @@ plan = model.plan(current_frame, goal_frame, max_steps=50)
 - **Plan in latent space** — CEM planner "imagines" thousands of futures without rendering pixels
 - **Deploy anywhere** — Export to ONNX or TorchScript for edge, mobile, or server
 - **Hub integration** — Push and pull trained models from Hugging Face
+
+### Supported Environments
+
+WorldKit works across domains -- bring any environment that produces pixel observations:
+
+- **Push-T** (manipulation) -- trained on real expert demonstrations
+- **CartPole** (balance control) -- trained on Gymnasium pixel observations
+- **Your environment** -- bring your own HDF5 data (see [examples/02_train_from_gym.py](examples/02_train_from_gym.py))
 
 ## Install
 
@@ -119,8 +129,23 @@ score = model.plausibility(video_frames)
 | [`DilpreetBansi/pusht`](https://huggingface.co/DilpreetBansi/pusht) | base | 13M | 192 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht")` |
 | [`DilpreetBansi/pusht-base`](https://huggingface.co/DilpreetBansi/pusht-base) | base | 13M | 192 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht-base")` |
 | [`DilpreetBansi/pusht-nano`](https://huggingface.co/DilpreetBansi/pusht-nano) | nano | 3.5M | 128 | Push-T manipulation | `WorldModel.from_hub("DilpreetBansi/pusht-nano")` |
+| [`DilpreetBansi/cartpole-base`](https://huggingface.co/DilpreetBansi/cartpole-base) | base | 13M | 192 | CartPole balance control | `WorldModel.from_hub("DilpreetBansi/cartpole-base")` |
+| [`DilpreetBansi/cartpole-nano`](https://huggingface.co/DilpreetBansi/cartpole-nano) | nano | 3.5M | 128 | CartPole balance control | `WorldModel.from_hub("DilpreetBansi/cartpole-nano")` |
 
-> Trained on real Push-T expert demonstrations. Train your own and share it: `model.save("my_model.wk")` then upload to the Hub.
+> Train your own and share it: `model.save("my_model.wk")` then upload to the Hub.
+
+## Benchmarks
+
+How does WorldKit compare to other world model frameworks?
+
+| Framework | Architecture | Params | Training Time | Hardware Required | Hyperparams |
+|-----------|-------------|--------|--------------|-------------------|-------------|
+| **WorldKit** | JEPA + SIGReg | 3.5M--13M | ~60s | Laptop CPU/GPU | 1 (lambda) |
+| Dreamer-v3 | RSSM + Actor-Critic | 20M--200M | 1--24 hours | GPU cluster | 30+ |
+| TD-MPC2 | MPC + learned model | 5M--50M | 2--8 hours | Single GPU | 15+ |
+| IRIS | Transformer + VQ-VAE | 15M--100M | 4--12 hours | Multi-GPU | 20+ |
+
+> WorldKit prioritizes simplicity and accessibility. It trains on a laptop in under a minute with a single hyperparameter (lambda). For production RL, consider combining WorldKit with policy learning frameworks.
 
 ## Model Configurations
 
@@ -283,17 +308,17 @@ WorldKit builds on these open-source projects:
 - **[Vision Transformer](https://arxiv.org/abs/2010.11929)** — Dosovitskiy et al., 2020
 - **[FastAPI](https://fastapi.tiangolo.com/)** — REST API framework (MIT License)
 
-### Citation
+## Citation
 
-If you use WorldKit in your research, please cite both WorldKit and the underlying research:
+If you use WorldKit in your research, please cite:
 
 ```bibtex
-@software{worldkit,
-  title   = {WorldKit: The Open-Source World Model SDK},
-  author  = {Bansi, Dilpreet},
-  year    = {2026},
-  url     = {https://github.com/DilpreetBansi/worldkit},
-  license = {MIT}
+@software{worldkit2025,
+  title={WorldKit: Open-Source SDK for JEPA World Models},
+  author={Bansi, Dilpreet},
+  year={2025},
+  url={https://github.com/DilpreetBansi/worldkit},
+  version={0.1.0}
 }
 
 @article{lewm2026,
@@ -345,7 +370,7 @@ Want to help build this? See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known Limitations
 
-- **Single environment** — current pre-trained models are trained on Push-T. More environments and real-world robotics models coming soon.
+- **Limited environments** — pre-trained models currently cover Push-T and CartPole. More environments and real-world robotics models coming soon.
 - **No video decoder** — WorldKit predicts in latent space. It does not reconstruct pixel observations from latent states (by design — this is a feature of JEPA, not a limitation).
 - **Single-task models** — each model is trained on one environment. Multi-task and transfer learning are planned.
 - **CPU/MPS training only tested** — CUDA training works but is less extensively tested at this stage.
