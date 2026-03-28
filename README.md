@@ -313,10 +313,10 @@ WorldKit builds on these open-source projects:
 If you use WorldKit in your research, please cite:
 
 ```bibtex
-@software{worldkit2025,
+@software{worldkit2026,
   title={WorldKit: Open-Source SDK for JEPA World Models},
   author={Bansi, Dilpreet},
-  year={2025},
+  year={2026},
   url={https://github.com/DilpreetBansi/worldkit},
   version={0.1.0}
 }
