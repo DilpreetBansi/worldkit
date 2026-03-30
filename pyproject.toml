@@ -88,6 +88,9 @@ Documentation = "https://github.com/DilpreetBansi/worldkit#readme"
 Repository = "https://github.com/DilpreetBansi/worldkit"
 Issues = "https://github.com/DilpreetBansi/worldkit/issues"
 
+[tool.hatch.build.targets.sdist]
+include = ["worldkit/", "README.md", "LICENSE", "pyproject.toml"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py310"
