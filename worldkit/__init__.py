@@ -11,10 +11,12 @@ Usage:
     plan = model.plan(current_frame, goal_frame)
 """
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 
 from worldkit.core.config import ModelConfig, get_config
+from worldkit.core.hierarchical_planner import HierarchicalPlanResult
 from worldkit.core.model import PredictionResult, ProbeResult, WorldModel
+from worldkit.core.online import OnlineLearner
 from worldkit.core.planner import PlanResult
 
 __all__ = [
@@ -22,6 +24,8 @@ __all__ = [
     "PredictionResult",
     "PlanResult",
     "ProbeResult",
+    "HierarchicalPlanResult",
+    "OnlineLearner",
     "get_config",
     "ModelConfig",
 ]

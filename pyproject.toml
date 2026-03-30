@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "worldkit"
-version = "0.1.0"
+version = "0.2.0"
 description = "The open-source world model runtime. Train physics-aware AI on a laptop. Deploy anywhere."
 readme = "README.md"
 license = { text = "MIT" }
@@ -60,6 +60,13 @@ serve = [
 export = [
     "onnx>=1.15",
     "onnxruntime>=1.17",
+]
+tensorrt = [
+    "tensorrt>=8.6",
+    "onnx>=1.15",
+]
+coreml = [
+    "coremltools>=7.0",
 ]
 all = [
     "worldkit[train,envs,serve,export]",

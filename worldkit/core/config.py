@@ -8,6 +8,7 @@ class ModelConfig:
     """Configuration for a WorldKit world model."""
 
     name: str = "base"
+    backend: str = "lewm"
 
     # Encoder
     encoder_name: str = "google/vit-base-patch16-224"

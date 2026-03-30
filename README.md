@@ -48,7 +48,16 @@ plan = model.plan(current_frame, goal_frame, max_steps=50)
 - **Train in minutes** — 13M-param model trains in ~60 seconds on an M4 MacBook
 - **One hyperparameter** — SIGReg regularization replaces 6+ collapse-prevention hyperparameters
 - **Plan in latent space** — CEM planner "imagines" thousands of futures without rendering pixels
-- **Deploy anywhere** — Export to ONNX or TorchScript for edge, mobile, or server
+- **Hierarchical planning** — Long-horizon tasks via subgoal decomposition in latent space
+- **Auto-config** — Automatically recommend the best model config for your data and hardware
+- **Latent probing** — Linear probe evaluation to measure what the latent space has learned
+- **Visualization** — PCA/t-SNE/UMAP latent space plots and rollout GIF generation
+- **Model distillation** — Compress a trained model into a smaller student for edge deployment
+- **Online learning** — Incrementally update models with streaming experience
+- **Benchmarks** — Standardized benchmark suite for comparing world models
+- **Federated training** — Privacy-preserving multi-client training with FedAvg aggregation
+- **Multi-backend** — Pluggable architecture backends (LeWM default, extensible)
+- **Deploy anywhere** — Export to ONNX, TorchScript, TensorRT, or CoreML
 - **Hub integration** — Push and pull trained models from Hugging Face
 
 ### Supported Environments
@@ -89,6 +98,14 @@ model = WorldModel.train(
 model.save("my_model.wk")
 ```
 
+### Auto-select the best config
+
+```python
+config, explanation = WorldModel.auto_config(data="my_data.h5", max_training_time="2h")
+print(explanation)  # "Recommended 'base' config — fits within 2h on this hardware"
+model = WorldModel.train(data="my_data.h5", config=config, epochs=100)
+```
+
 ### Load a pre-trained model
 
 ```python
@@ -112,6 +129,11 @@ result = model.predict(current_frame, actions=[action] * 10)
 plan = model.plan(current_frame, goal_frame, max_steps=50)
 # plan.actions: optimized action sequence
 # plan.cost: final planning cost (lower = closer to goal)
+
+# For long-horizon tasks, use hierarchical planning
+plan = model.hierarchical_plan(current_frame, goal_frame, max_subgoals=5)
+# plan.actions: full action sequence connecting subgoals
+# plan.subgoal_latents: intermediate subgoal representations
 ```
 
 ### Detect anomalies
@@ -120,6 +142,37 @@ plan = model.plan(current_frame, goal_frame, max_steps=50)
 # Score whether a video sequence is physically plausible
 score = model.plausibility(video_frames)
 # 1.0 = expected behavior, 0.0 = physically impossible
+```
+
+### Probe the latent space
+
+```python
+# Measure what the encoder has learned
+result = model.probe(data="my_data.h5", properties=["x", "y", "angle"], labels="labels.csv")
+print(result.summary)  # R² per property
+
+# Visualize latent space structure
+model.visualize_latent_space(data="my_data.h5", method="pca", save_to="latents.png")
+
+# Generate a rollout GIF
+model.rollout_gif(observation, actions, save_to="rollout.gif")
+```
+
+### Distill and deploy
+
+```python
+# Compress a model for edge deployment
+student = WorldModel.distill(teacher=model, student_config="nano", data="my_data.h5")
+student.export(format="onnx", output="./deploy/")
+```
+
+### Online learning
+
+```python
+# Incrementally adapt a model to new experience
+model.enable_online_learning(lr=1e-5, buffer_size=1000)
+for obs, action, next_obs in stream:
+    loss = model.update(obs, action, next_obs)
 ```
 
 ## Pre-trained Models
@@ -265,13 +318,15 @@ worldkit serve --model ./model.wk --port 8000
 
 ```
 worldkit/
-├── core/           # WorldModel, ViT encoder, predictor, CEM planner, SIGReg loss
-├── data/           # HDF5 dataset, env recorder, video converter
-├── cli/            # CLI commands (train, serve, export, hub, convert)
-├── server/         # FastAPI inference server
-├── envs/           # Gymnasium wrappers
-├── eval/           # Benchmarks, probing, visualization
-├── export/         # ONNX and TorchScript export
+├── core/           # WorldModel, ViT encoder, predictor, planners, SIGReg loss, distillation, online learning
+├── data/           # HDF5 dataset, env recorder, video converter, multi-env datasets
+├── cli/            # CLI commands (train, serve, export, hub, convert, bench, env)
+├── server/         # FastAPI inference server with WebSocket support
+├── envs/           # Gymnasium wrappers and environment registry
+├── eval/           # Probing, visualization, comparison, rollout GIFs
+├── bench/          # Standardized benchmark suite and leaderboard
+├── export/         # ONNX, TorchScript, TensorRT, CoreML export
+├── federated/      # Privacy-preserving federated training
 └── hub/            # Hugging Face Hub integration
 ```
 
@@ -287,7 +342,7 @@ The concept of learning world models with neural networks was pioneered by:
 
 Ha & Schmidhuber demonstrated that agents can learn entirely inside their own "dreams" — training in a learned simulation of the environment and transferring policies back to reality. Their VAE + MDN-RNN architecture is the foundation that all modern world models build upon.
 
-WorldKit v0.1 implements the architecture and training methodology from:
+WorldKit implements the architecture and training methodology from:
 
 > **LeWorldModel: Learning World Models with Joint-Embedding Predictive Architectures**
 > Lucas Maes, Quentin Le Lidec, Damien Scieur, Yann LeCun, Randall Balestriero (2026)
@@ -318,7 +373,7 @@ If you use WorldKit in your research, please cite:
   author={Bansi, Dilpreet},
   year={2026},
   url={https://github.com/DilpreetBansi/worldkit},
-  version={0.1.0}
+  version={0.2.0}
 }
 
 @article{lewm2026,
@@ -340,24 +395,25 @@ If you use WorldKit in your research, please cite:
 
 ## Roadmap
 
-WorldKit v0.1 ships with the LeWM architecture. The goal is to become a **unified SDK for all world model architectures** — same `train/predict/plan` API, multiple backends.
+WorldKit v0.2 ships with the LeWM architecture and a full evaluation/deployment toolkit. The goal is to become a **unified SDK for all world model architectures** — same `train/predict/plan` API, multiple backends.
 
-| Version | Architecture | Type | Status |
-|---------|-------------|------|--------|
-| **v0.1** | [LeWM](https://le-wm.github.io/) (JEPA + SIGReg) | Latent prediction | **Available now** |
-| v0.2 | [Ha & Schmidhuber (2018)](https://worldmodels.github.io/) (VAE + MDN-RNN) | Generative | Planned |
-| v0.3 | [Dreamer V4](https://arxiv.org/abs/2301.04104) (VAE-based) | Generative | Planned |
-| v0.4 | [TD-MPC2](https://arxiv.org/abs/2310.16828) (task-specific MPC) | Latent prediction | Planned |
-| v0.5 | [DIAMOND](https://arxiv.org/abs/2405.12399) (diffusion-based) | Generative | Planned |
-| v0.6 | Custom architecture API | Any | Planned |
+| Version | What's New | Status |
+|---------|-----------|--------|
+| **v0.1** | LeWM architecture (JEPA + SIGReg), CEM planning, Hub integration | Released |
+| **v0.2** | Hierarchical planning, auto-config, probing, visualization, distillation, online learning, benchmarks, federated training, multi-backend architecture, TensorRT/CoreML export | **Available now** |
+| v0.3 | [Ha & Schmidhuber (2018)](https://worldmodels.github.io/) (VAE + MDN-RNN) backend | Planned |
+| v0.4 | [Dreamer V4](https://arxiv.org/abs/2301.04104) (VAE-based) backend | Planned |
+| v0.5 | [TD-MPC2](https://arxiv.org/abs/2310.16828) (task-specific MPC) backend | Planned |
+| v0.6 | [DIAMOND](https://arxiv.org/abs/2405.12399) (diffusion-based) backend | Planned |
+| v0.7 | Custom architecture API | Planned |
 
 The vision:
 
 ```python
-# Today (v0.1) — LeWM is the default and only backend
+# Today (v0.2) — LeWM is the default backend, with full eval + deployment
 model = WorldModel.train(data="my_data.h5", config="base")
 
-# Future (v0.2+) — choose your architecture, same API
+# Future (v0.3+) — choose your architecture, same API
 model = WorldModel.train(data="my_data.h5", arch="lewm", config="base")
 model = WorldModel.train(data="my_data.h5", arch="ha2018", config="base")
 model = WorldModel.train(data="my_data.h5", arch="dreamer", config="medium")

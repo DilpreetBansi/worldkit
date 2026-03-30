@@ -1,5 +1,5 @@
 site_name: WorldKit
-site_description: The open-source world model runtime
+site_description: The open-source world model SDK
 repo_url: https://github.com/worldkit-ai/worldkit
 theme:
   name: material
@@ -8,10 +8,34 @@ theme:
     accent: amber
 nav:
   - Home: index.md
+  - Installation: installation.md
   - Quickstart: quickstart.md
-  - API Reference: api_reference.md
+  - API Reference:
+      - WorldModel: api/worldmodel.md
+      - Config: api/config.md
+      - Prediction: api/prediction.md
+      - Planning: api/planning.md
+      - Plausibility: api/plausibility.md
+      - Probing: api/probing.md
+      - Data: api/data.md
   - Tutorials:
-      - Training: tutorials/training.md
-      - Planning: tutorials/planning.md
-      - Deployment: tutorials/deployment.md
+      - Train your first model: tutorials/train_first_model.md
+      - Plan robot actions: tutorials/plan_robot_actions.md
+      - Anomaly detection: tutorials/anomaly_detection.md
+      - Export and deploy: tutorials/export_deploy.md
+      - Custom environments: tutorials/custom_environment.md
+      - Contribute a model: tutorials/contribute_model.md
+      - Benchmark your model: tutorials/benchmark_your_model.md
+  - Guides:
+      - Model configurations: guides/model_configs.md
+      - Data preparation: guides/data_preparation.md
+      - .wk file format: guides/wk_format.md
+      - .wk format specification: wk_format_spec.md
+      - Architecture: guides/architecture.md
+  - CLI Reference: cli.md
+  - REST API Reference: rest_api.md
   - Model Zoo: model_zoo.md
+  - Benchmarks: benchmarks.md
+  - FAQ: faq.md
+  - Changelog: changelog.md
+  - Contributing: contributing.md
