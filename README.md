@@ -16,7 +16,7 @@ Train, predict, plan, and deploy — on a laptop.
 
 <img src="demo.gif" alt="WorldKit Demo" width="720">
 
-Try the interactive tutorial: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DilpreetBansi/worldkit/blob/main/notebooks/quickstart.ipynb)
+Try the interactive tutorial: [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/DilpreetBansi/worldkit/blob/main/notebooks/01_quickstart.ipynb)
 
 </div>
 
