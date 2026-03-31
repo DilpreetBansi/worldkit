@@ -7,7 +7,7 @@ build/
 .eggs/
 *.wk
 checkpoints/
-export/
+/export/
 *.h5
 *.hdf5
 .env

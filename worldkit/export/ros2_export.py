@@ -1,0 +1,379 @@
+"""ROS2 package generator for WorldKit models.
+
+Exports a WorldKit model as a complete ROS2 Python package that can be
+built and run on any ROS2 (Humble+) system. No ROS2 installation is
+required on the machine that runs this export — it is pure file generation.
+"""
+
+from __future__ import annotations
+
+import textwrap
+from pathlib import Path
+
+from worldkit.core.model import WorldModel
+
+
+def export_ros2(
+    model: WorldModel,
+    output_dir: str | Path,
+    node_name: str = "worldkit_node",
+) -> Path:
+    """Generate a complete ROS2 Python package for a WorldKit model.
+
+    Args:
+        model: A trained WorldModel instance.
+        output_dir: Directory where the ROS2 package will be created.
+        node_name: Name of the ROS2 package and node.
+
+    Returns:
+        Path to the generated package directory.
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    config = model.config
+    latent_dim = config.latent_dim
+    action_dim = config.action_dim
+    image_size = config.image_size
+
+    _write_package_xml(output_dir, node_name)
+    _write_setup_py(output_dir, node_name)
+    _write_setup_cfg(output_dir, node_name)
+    _write_resource(output_dir, node_name)
+    _write_node_package(output_dir, node_name, latent_dim, action_dim, image_size)
+    _write_launch_file(output_dir, node_name)
+    _write_params_yaml(output_dir, latent_dim, action_dim, image_size)
+    _write_model(output_dir, model)
+
+    return output_dir
+
+
+def _write_package_xml(output_dir: Path, node_name: str) -> None:
+    content = textwrap.dedent(f"""\
+        <?xml version="1.0"?>
+        <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+        <package format="3">
+          <name>{node_name}</name>
+          <version>0.1.0</version>
+          <description>WorldKit world model inference node</description>
+          <maintainer email="user@example.com">worldkit</maintainer>
+          <license>MIT</license>
+
+          <depend>rclpy</depend>
+          <depend>sensor_msgs</depend>
+          <depend>std_msgs</depend>
+          <depend>cv_bridge</depend>
+
+          <exec_depend>python3-numpy</exec_depend>
+          <exec_depend>python3-torch</exec_depend>
+
+          <test_depend>ament_copyright</test_depend>
+          <test_depend>ament_flake8</test_depend>
+          <test_depend>ament_pep257</test_depend>
+          <test_depend>python3-pytest</test_depend>
+
+          <export>
+            <build_type>ament_python</build_type>
+          </export>
+        </package>
+    """)
+    (output_dir / "package.xml").write_text(content)
+
+
+def _write_setup_py(output_dir: Path, node_name: str) -> None:
+    content = textwrap.dedent(f"""\
+        from setuptools import find_packages, setup
+
+        package_name = "{node_name}"
+
+        setup(
+            name=package_name,
+            version="0.1.0",
+            packages=find_packages(exclude=["test"]),
+            data_files=[
+                ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
+                ("share/" + package_name, ["package.xml"]),
+                ("share/" + package_name + "/launch", ["launch/worldkit.launch.py"]),
+                ("share/" + package_name + "/config", ["config/params.yaml"]),
+            ],
+            install_requires=["setuptools", "worldkit"],
+            zip_safe=True,
+            maintainer="worldkit",
+            maintainer_email="user@example.com",
+            description="WorldKit world model inference node",
+            license="MIT",
+            entry_points={{
+                "console_scripts": [
+                    "worldkit_node = {node_name}.worldkit_node:main",
+                ],
+            }},
+        )
+    """)
+    (output_dir / "setup.py").write_text(content)
+
+
+def _write_setup_cfg(output_dir: Path, node_name: str) -> None:
+    content = textwrap.dedent(f"""\
+        [develop]
+        script_dir=$base/lib/{node_name}
+
+        [install]
+        install_scripts=$base/lib/{node_name}
+    """)
+    (output_dir / "setup.cfg").write_text(content)
+
+
+def _write_resource(output_dir: Path, node_name: str) -> None:
+    resource_dir = output_dir / "resource"
+    resource_dir.mkdir(parents=True, exist_ok=True)
+    (resource_dir / node_name).write_text("")
+
+
+def _write_node_package(
+    output_dir: Path,
+    node_name: str,
+    latent_dim: int,
+    action_dim: int,
+    image_size: int,
+) -> None:
+    pkg_dir = output_dir / node_name
+    pkg_dir.mkdir(parents=True, exist_ok=True)
+    (pkg_dir / "__init__.py").write_text("")
+
+    node_content = textwrap.dedent(f"""\
+        \"\"\"WorldKit ROS2 inference node.
+
+        Subscribes to camera images, encodes them into latent vectors,
+        runs plausibility checks, and plans actions toward goal images.
+
+        Auto-generated by WorldKit export. Model latent_dim={latent_dim},
+        action_dim={action_dim}, image_size={image_size}.
+        \"\"\"
+
+        import os
+        from collections import deque
+        from pathlib import Path
+
+        import numpy as np
+        import rclpy
+        from cv_bridge import CvBridge
+        from rclpy.node import Node
+        from sensor_msgs.msg import Image
+        from std_msgs.msg import Float32, Float32MultiArray
+
+
+        class WorldKitNode(Node):
+            \"\"\"ROS2 node for WorldKit world model inference.\"\"\"
+
+            def __init__(self):
+                super().__init__("{node_name}")
+
+                # Declare parameters with defaults
+                self.declare_parameter("model_path", "models/model.wk")
+                self.declare_parameter("planning_horizon", 50)
+                self.declare_parameter("plausibility_threshold", 0.5)
+                self.declare_parameter("plausibility_window", 10)
+                self.declare_parameter("image_topic", "/camera/image_raw")
+                self.declare_parameter("goal_topic", "/worldkit/goal")
+                self.declare_parameter("latent_topic", "/worldkit/latent")
+                self.declare_parameter("plan_topic", "/worldkit/plan")
+                self.declare_parameter("plausibility_topic", "/worldkit/plausibility")
+
+                # Load parameters
+                model_path = self.get_parameter("model_path").get_parameter_value().string_value
+                self._planning_horizon = (
+                    self.get_parameter("planning_horizon").get_parameter_value().integer_value
+                )
+                self._plausibility_threshold = (
+                    self.get_parameter("plausibility_threshold")
+                    .get_parameter_value()
+                    .double_value
+                )
+                plausibility_window = (
+                    self.get_parameter("plausibility_window")
+                    .get_parameter_value()
+                    .integer_value
+                )
+                image_topic = (
+                    self.get_parameter("image_topic").get_parameter_value().string_value
+                )
+                goal_topic = (
+                    self.get_parameter("goal_topic").get_parameter_value().string_value
+                )
+                latent_topic = (
+                    self.get_parameter("latent_topic").get_parameter_value().string_value
+                )
+                plan_topic = (
+                    self.get_parameter("plan_topic").get_parameter_value().string_value
+                )
+                plausibility_topic = (
+                    self.get_parameter("plausibility_topic")
+                    .get_parameter_value()
+                    .string_value
+                )
+
+                # Load WorldKit model
+                # Resolve model_path relative to this package's share directory
+                if not os.path.isabs(model_path):
+                    pkg_share = (
+                        Path(__file__).resolve().parent.parent / "models"
+                    )
+                    candidate = pkg_share / Path(model_path).name
+                    if candidate.exists():
+                        model_path = str(candidate)
+
+                from worldkit import WorldModel
+
+                self._model = WorldModel.load(model_path, device="auto")
+                self.get_logger().info(
+                    f"Loaded WorldKit model: {{self._model.config.name}} "
+                    f"({{self._model.num_params:,}} params)"
+                )
+
+                # State
+                self._bridge = CvBridge()
+                self._frame_buffer = deque(maxlen=plausibility_window)
+                self._goal_image = None
+
+                # Subscribers
+                self.create_subscription(Image, image_topic, self._on_image, 10)
+                self.create_subscription(Image, goal_topic, self._on_goal, 10)
+
+                # Publishers
+                self._latent_pub = self.create_publisher(
+                    Float32MultiArray, latent_topic, 10
+                )
+                self._plan_pub = self.create_publisher(
+                    Float32MultiArray, plan_topic, 10
+                )
+                self._plausibility_pub = self.create_publisher(
+                    Float32, plausibility_topic, 10
+                )
+
+                self.get_logger().info("WorldKit node ready")
+
+            def _on_image(self, msg: Image):
+                \"\"\"Handle incoming camera image.\"\"\"
+                frame = self._bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
+                frame_np = np.array(frame, dtype=np.float32)
+
+                # Encode and publish latent
+                latent = self._model.encode(frame_np)
+                latent_msg = Float32MultiArray()
+                latent_msg.data = latent.numpy().flatten().tolist()
+                self._latent_pub.publish(latent_msg)
+
+                # Plausibility scoring
+                self._frame_buffer.append(frame_np)
+                if len(self._frame_buffer) >= 2:
+                    score = self._model.plausibility(list(self._frame_buffer))
+                    score_msg = Float32()
+                    score_msg.data = score
+                    self._plausibility_pub.publish(score_msg)
+
+                    if score < self._plausibility_threshold:
+                        self.get_logger().warn(
+                            f"Low plausibility score: {{score:.3f}}"
+                        )
+
+                # Planning (if goal is set)
+                if self._goal_image is not None:
+                    plan_result = self._model.plan(
+                        current_state=frame_np,
+                        goal_state=self._goal_image,
+                        max_steps=self._planning_horizon,
+                    )
+                    plan_msg = Float32MultiArray()
+                    plan_msg.data = plan_result.actions.flatten().tolist()
+                    self._plan_pub.publish(plan_msg)
+
+            def _on_goal(self, msg: Image):
+                \"\"\"Handle incoming goal image.\"\"\"
+                frame = self._bridge.imgmsg_to_cv2(msg, desired_encoding="rgb8")
+                self._goal_image = np.array(frame, dtype=np.float32)
+                self.get_logger().info("Goal image updated")
+
+
+        def main(args=None):
+            \"\"\"Entry point for the WorldKit ROS2 node.\"\"\"
+            rclpy.init(args=args)
+            node = WorldKitNode()
+            try:
+                rclpy.spin(node)
+            except KeyboardInterrupt:
+                pass
+            finally:
+                node.destroy_node()
+                rclpy.shutdown()
+
+
+        if __name__ == "__main__":
+            main()
+    """)
+    (pkg_dir / "worldkit_node.py").write_text(node_content)
+
+
+def _write_launch_file(output_dir: Path, node_name: str) -> None:
+    launch_dir = output_dir / "launch"
+    launch_dir.mkdir(parents=True, exist_ok=True)
+
+    content = textwrap.dedent(f"""\
+        \"\"\"Launch file for the WorldKit ROS2 node.\"\"\"
+
+        import os
+
+        from ament_index_python.packages import get_package_share_directory
+        from launch import LaunchDescription
+        from launch_ros.actions import Node
+
+
+        def generate_launch_description():
+            \"\"\"Generate launch description with params from config/params.yaml.\"\"\"
+            pkg_share = get_package_share_directory("{node_name}")
+            params_file = os.path.join(pkg_share, "config", "params.yaml")
+
+            worldkit_node = Node(
+                package="{node_name}",
+                executable="worldkit_node",
+                name="{node_name}",
+                parameters=[params_file],
+                output="screen",
+            )
+
+            return LaunchDescription([worldkit_node])
+    """)
+    (launch_dir / "worldkit.launch.py").write_text(content)
+
+
+def _write_params_yaml(
+    output_dir: Path,
+    latent_dim: int,
+    action_dim: int,
+    image_size: int,
+) -> None:
+    config_dir = output_dir / "config"
+    config_dir.mkdir(parents=True, exist_ok=True)
+
+    content = textwrap.dedent(f"""\
+        # WorldKit ROS2 node parameters
+        # Model: latent_dim={latent_dim}, action_dim={action_dim}, image_size={image_size}
+
+        /**:
+          ros__parameters:
+            model_path: "models/model.wk"
+            planning_horizon: 50
+            plausibility_threshold: 0.5
+            plausibility_window: 10
+            image_topic: "/camera/image_raw"
+            goal_topic: "/worldkit/goal"
+            latent_topic: "/worldkit/latent"
+            plan_topic: "/worldkit/plan"
+            plausibility_topic: "/worldkit/plausibility"
+    """)
+    (config_dir / "params.yaml").write_text(content)
+
+
+def _write_model(output_dir: Path, model: WorldModel) -> None:
+    models_dir = output_dir / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    model.save(models_dir / "model.wk")
