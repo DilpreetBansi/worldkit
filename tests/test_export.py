@@ -19,6 +19,7 @@ def _tensorrt_available() -> bool:
 def _onnx_available() -> bool:
     try:
         import onnx  # noqa: F401
+        import onnxscript  # noqa: F401
 
         return True
     except ImportError:

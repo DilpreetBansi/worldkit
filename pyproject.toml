@@ -56,10 +56,12 @@ serve = [
     "fastapi>=0.110",
     "uvicorn>=0.27",
     "python-multipart>=0.0.6",
+    "websockets>=12.0",
 ]
 export = [
     "onnx>=1.15",
     "onnxruntime>=1.17",
+    "onnxscript>=0.1",
 ]
 tensorrt = [
     "tensorrt>=8.6",

@@ -6,11 +6,22 @@ import asyncio
 
 import h5py
 import numpy as np
+import pytest
 import torch
 
 from worldkit.core.config import get_config
 from worldkit.core.model import WorldModel
 from worldkit.federated import protocol
+
+
+def _ws_available() -> bool:
+    try:
+        import websockets  # noqa: F401
+
+        return True
+    except ImportError:
+        return False
+
 
 # ── Helpers ──────────────────────────────────────────────
 
@@ -230,6 +241,10 @@ class TestFedAvgAggregation:
 
 
 class TestClientServerIntegration:
+    @pytest.mark.skipif(
+        not _ws_available(),
+        reason="websockets not installed",
+    )
     def test_two_clients_one_round(self, tmp_path):
         """Two clients complete 1 round of federated training on localhost."""
         from worldkit.federated.client import FederatedClient
